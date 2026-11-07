@@ -2,7 +2,8 @@
 # Install the foot terminal with Omarchy's config and its Nord theme colors.
 #
 # Copies Omarchy's foot.ini (config/foot/foot.ini): JetBrainsMono Nerd Font
-# size 9, 14px padding, 10k lines of scrollback, a block cursor that doesn't
+# size 11 (Omarchy uses 9), 14px padding, a 1050x750 window (foot defaults
+# to 700x500), 10k lines of scrollback, a block cursor that doesn't
 # blink, Ctrl+Shift+C/V copy and paste, no middle-click paste, and
 # Shift+Return sent as CSI-u so TUIs can tell it apart from Return.
 #
@@ -72,9 +73,10 @@ cat >"$CONFIG_DIR/foot.ini" <<'INI'
 [main]
 include=~/.config/foot/themes/nord.ini
 term=xterm-256color
-font=JetBrainsMono Nerd Font:size=9
+font=JetBrainsMono Nerd Font:size=11
 pad=14x14
 initial-window-mode=windowed
+initial-window-size-pixels=1050x750
 workers=0
 
 [scrollback]
