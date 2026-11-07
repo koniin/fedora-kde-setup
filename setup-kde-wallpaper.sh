@@ -44,6 +44,12 @@ OLD_LOGIN_FILES=(
 # Marks a global theme made by setup-kde-henke-theme.sh.
 MARKER=".made-by-system-install"
 
+# ImageMagick reads the image size (setup-kde-nord-theme.sh normally installs it).
+if ! command -v magick >/dev/null; then
+  echo "Installing ImageMagick..."
+  sudo dnf install -y ImageMagick
+fi
+
 # The images in the wallpapers folder, sorted by name.
 choices=()
 if [[ -d $WALLPAPERS ]]; then

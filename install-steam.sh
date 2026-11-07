@@ -56,6 +56,9 @@ if flatpak info com.valvesoftware.Steam >/dev/null 2>&1; then
   echo "  flatpak uninstall com.valvesoftware.Steam"
 fi
 
+fresh=false
+rpm -q steam >/dev/null 2>&1 || fresh=true
+
 echo "Enabling Steam repository..."
 enable_steam_repo
 
@@ -64,5 +67,10 @@ echo "Installing Steam and 32-bit graphics drivers..."
 sudo dnf install -y steam $(gpu_packages)
 
 echo ""
-echo "Steam will start now. The first launch downloads updates and can take a while..."
-setsid steam >/dev/null 2>&1 &
+# Start it only after a fresh install (NO_LAUNCH=1 skips this; run-all.sh sets it).
+if $fresh && [[ -z ${NO_LAUNCH:-} ]]; then
+  echo "Steam will start now. The first launch downloads updates and can take a while..."
+  setsid steam >/dev/null 2>&1 &
+else
+  echo "Steam is installed. The first launch downloads updates and can take a while."
+fi

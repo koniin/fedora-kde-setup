@@ -188,7 +188,10 @@ QML
 
 echo "Installing widget..."
 UPGRADED=false
-if kpackagetool6 -t Plasma/Applet --show "$WIDGET_ID" >/dev/null 2>&1; then
+INSTALLED_PKG="${XDG_DATA_HOME:-$HOME/.local/share}/plasma/plasmoids/$WIDGET_ID"
+if diff -rq "$PKG" "$INSTALLED_PKG" >/dev/null 2>&1; then
+  echo "The widget is already installed and up to date."
+elif kpackagetool6 -t Plasma/Applet --show "$WIDGET_ID" >/dev/null 2>&1; then
   kpackagetool6 -t Plasma/Applet --upgrade "$PKG" >/dev/null
   UPGRADED=true
 else

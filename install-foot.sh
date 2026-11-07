@@ -15,7 +15,8 @@
 # used by "Open Terminal Here" in Dolphin and by .desktop apps with Terminal=true),
 # and setup-kde-shortcuts.sh is run again so Meta+Return opens foot.
 #
-# Your old foot.ini is backed up to foot.ini.bak. Safe to run again.
+# A foot.ini that differs from this one is backed up to foot.ini.bak first.
+# Safe to run again.
 
 set -euo pipefail
 
@@ -63,13 +64,9 @@ bright6=8fbcbb
 bright7=d8dee9
 INI
 
-if [[ -f $CONFIG_DIR/foot.ini ]]; then
-  cp "$CONFIG_DIR/foot.ini" "$CONFIG_DIR/foot.ini.bak"
-  echo "Backed up your old config to $CONFIG_DIR/foot.ini.bak"
-fi
-
-echo "Writing $CONFIG_DIR/foot.ini..."
-cat >"$CONFIG_DIR/foot.ini" <<'INI'
+NEW_INI=$(mktemp)
+trap 'rm -f "$NEW_INI"' EXIT
+cat >"$NEW_INI" <<'INI'
 [main]
 include=~/.config/foot/themes/nord.ini
 term=xterm-256color
@@ -98,6 +95,15 @@ clipboard-paste=Shift+Insert Control+Shift+v XF86Paste
 # Send Alt+Shift+Return as CSI-u so tmux can match M-S-Enter.
 \x1b[13;4u=Mod1+Shift+Return
 INI
+
+# Back up only a config that isn't already ours, so running this again doesn't
+# overwrite the backup of your original with a copy of this script's config.
+if [[ -f $CONFIG_DIR/foot.ini ]] && ! cmp -s "$NEW_INI" "$CONFIG_DIR/foot.ini"; then
+  cp "$CONFIG_DIR/foot.ini" "$CONFIG_DIR/foot.ini.bak"
+  echo "Backed up your old config to $CONFIG_DIR/foot.ini.bak"
+fi
+echo "Writing $CONFIG_DIR/foot.ini..."
+install -m 644 "$NEW_INI" "$CONFIG_DIR/foot.ini"
 
 echo "Making foot the default terminal..."
 # The desktop file was renamed in foot 1.20; use whichever this package ships.

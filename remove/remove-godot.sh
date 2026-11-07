@@ -4,7 +4,11 @@
 
 set -e
 
-sudo dnf remove -y godot
+if rpm -q godot >/dev/null 2>&1; then
+  sudo dnf remove -y godot
+else
+  echo "godot is not installed."
+fi
 
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 settings=()

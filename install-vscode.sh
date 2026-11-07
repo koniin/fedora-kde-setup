@@ -97,6 +97,9 @@ add_repo
 # without the OpenSSL 3 compat libraries vsce-sign crashes ("No usable version
 # of libssl was found") and every extension install fails with "Signature
 # verification failed with 'UnknownError'".
+fresh=false
+rpm -q code >/dev/null 2>&1 || fresh=true
+
 echo "Installing VS Code..."
 sudo dnf install -y code openssl3-libs
 
@@ -104,8 +107,11 @@ echo "Configuring VS Code..."
 write_argv
 write_settings
 
-echo "Opening VS Code..."
-setsid code >/dev/null 2>&1 &
+# Open it only after a fresh install (NO_LAUNCH=1 skips this; run-all.sh sets it).
+if $fresh && [[ -z ${NO_LAUNCH:-} ]]; then
+  echo "Opening VS Code..."
+  setsid code >/dev/null 2>&1 &
+fi
 
 echo ""
 echo "VS Code has been installed. Update it with 'sudo dnf upgrade code'."

@@ -6,7 +6,9 @@
 # The setting is written to user.js in every Firefox profile, which Firefox
 # reads on each start, so it sticks even if prefs.js gets reset. Covers the
 # current (~/.config/mozilla), legacy (~/.mozilla) and Flatpak profile folders.
-# Restart Firefox to pick it up. Safe to run again.
+# Restart Firefox to pick it up. If Firefox has never been started, it's
+# started once in the background (no window) to create its profile.
+# Safe to run again.
 
 set -euo pipefail
 
@@ -41,6 +43,22 @@ set_pref() {
     echo "$line" >>"$file"
   fi
 }
+
+have_profile() {
+  local root
+  for root in "${PROFILE_ROOTS[@]}"; do
+    [[ -f $root/profiles.ini ]] && return 0
+  done
+  return 1
+}
+
+# A fresh install has no profile until Firefox starts once. A short headless
+# start creates the default profile without opening a window.
+if ! have_profile && command -v firefox >/dev/null; then
+  echo "Firefox has no profile yet; starting it once in the background to create one..."
+  timeout 20 firefox --headless about:blank >/dev/null 2>&1 || true
+  sleep 1
+fi
 
 found=0
 for root in "${PROFILE_ROOTS[@]}"; do

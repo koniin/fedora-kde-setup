@@ -7,7 +7,8 @@
 # widgets you've added stay on the left, in their current order. Widget settings
 # (pinned apps, tray items) are kept; the clock gets the settings below.
 #
-# Restarts the panel at the end so the new order takes effect. Safe to run again.
+# Restarts the panel at the end if the widget order changed, so the new order
+# takes effect. Safe to run again.
 
 set -euo pipefail
 
@@ -69,7 +70,7 @@ plasma_script "
 sleep 2
 
 echo "Arranging widgets..."
-plasma_script "
+arranged=$(plasma_script "
   $FIND_PANEL
   const MIDDLE = ['local.caffeine'];  // shown just left of the clock
   const RIGHT = ['org.kde.plasma.systemtray', 'org.kde.plasma.showdesktop'];
@@ -92,9 +93,11 @@ plasma_script "
   const right = RIGHT.reduce((acc, t) => acc.concat(order.filter(id => type(id) === t)), []);
 
   const final = left.concat([spacers[0]], middle, clock, [spacers[1]], right);
-  p.writeConfig('AppletOrder', final.join(';'));
-  print(final.map(id => type(id).replace('org.kde.plasma.', '')).join(', '));
-"
+  const changed = final.join(';') !== String(p.readConfig('AppletOrder', ''));
+  if (changed) p.writeConfig('AppletOrder', final.join(';'));
+  print((changed ? 'CHANGED ' : 'SAME ') + final.map(id => type(id).replace('org.kde.plasma.', '')).join(', '));
+")
+echo "${arranged#* }"
 
 echo "Applying clock settings..."
 plasma_script "
@@ -108,9 +111,13 @@ plasma_script "
   });
 " >/dev/null
 
-echo "Restarting the panel to apply the new order..."
-timeout 90 systemctl --user restart plasma-plasmashell.service ||
-  echo "The panel took long to restart; log out and back in if it looks wrong."
+if [[ $arranged == CHANGED* ]]; then
+  echo "Restarting the panel to apply the new order..."
+  timeout 90 systemctl --user restart plasma-plasmashell.service ||
+    echo "The panel took long to restart; log out and back in if it looks wrong."
+else
+  echo "Widget order is already right; no panel restart needed."
+fi
 
 echo ""
 echo "Done. To change the size or position later, edit the values at the top of"

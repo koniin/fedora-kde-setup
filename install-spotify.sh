@@ -24,6 +24,9 @@ install_native() {
     sudo dnf config-manager addrepo --from-repofile="$REPO_URL"
   fi
 
+  local fresh=false
+  rpm -q spotify-client >/dev/null 2>&1 || fresh=true
+
   echo "Installing Spotify..."
   sudo dnf install -y spotify-client
 
@@ -32,13 +35,19 @@ install_native() {
     echo "  flatpak uninstall com.spotify.Client"
   fi
 
-  echo "Opening Spotify..."
-  setsid /usr/bin/spotify >/dev/null 2>&1 &
+  if $fresh && [[ -z ${NO_LAUNCH:-} ]]; then
+    echo "Opening Spotify..."
+    setsid /usr/bin/spotify >/dev/null 2>&1 &
+  fi
 }
 
 # Like omarchy's omarchy-webapp-install: an app menu entry that opens the
 # web player. Here it opens in your default browser.
+# Either way Spotify is opened only after a fresh install (NO_LAUNCH=1 skips
+# that; run-all.sh sets it).
 install_webapp() {
+  local fresh=false
+  [[ -f $APPS_DIR/Spotify.desktop ]] || fresh=true
   echo "Spotify has no Linux client for $(uname -m); installing Spotify as a web app..."
   mkdir -p "$APPS_DIR/icons"
   curl -fsSL -o "$APPS_DIR/icons/Spotify.png" "$ICON_URL" || true
@@ -58,8 +67,10 @@ DESKTOP
   chmod +x "$APPS_DIR/Spotify.desktop"
   update-desktop-database "$APPS_DIR" 2>/dev/null || true
 
-  echo "Opening Spotify..."
-  setsid xdg-open "$WEB_URL" >/dev/null 2>&1 &
+  if $fresh && [[ -z ${NO_LAUNCH:-} ]]; then
+    echo "Opening Spotify..."
+    setsid xdg-open "$WEB_URL" >/dev/null 2>&1 &
+  fi
 }
 
 if [[ $(uname -m) == x86_64 ]]; then

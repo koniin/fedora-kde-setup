@@ -21,7 +21,13 @@ if [[ -f $FIREFOX_POLICY_FILE ]] && command -v jq >/dev/null 2>&1; then
   fi
 fi
 
-sudo dnf remove -y 1password 1password-cli
+installed=()
+for pkg in 1password 1password-cli; do
+  rpm -q "$pkg" >/dev/null 2>&1 && installed+=("$pkg")
+done
+if ((${#installed[@]})); then
+  sudo dnf remove -y "${installed[@]}"
+fi
 sudo rm -f /etc/yum.repos.d/1password.repo
 
 echo ""

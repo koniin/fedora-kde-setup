@@ -77,6 +77,9 @@ install_firefox_extension() {
 echo "Adding 1Password repository..."
 add_repo
 
+fresh=false
+rpm -q 1password >/dev/null 2>&1 || fresh=true
+
 echo "Installing 1Password..."
 sudo dnf install -y 1password 1password-cli jq
 
@@ -84,8 +87,11 @@ echo "Installing 1Password browser extension..."
 install_browser_extensions
 install_firefox_extension
 
-echo "Opening 1Password..."
-setsid 1password >/dev/null 2>&1 &
+# Open it only after a fresh install (NO_LAUNCH=1 skips this; run-all.sh sets it).
+if $fresh && [[ -z ${NO_LAUNCH:-} ]]; then
+  echo "Opening 1Password..."
+  setsid 1password >/dev/null 2>&1 &
+fi
 
 echo ""
 echo "1Password has been installed. Restart your browser to load the extension."

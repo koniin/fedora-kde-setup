@@ -2,7 +2,11 @@
 # Remove Visual Studio Code and its repo on Fedora.
 # Settings and extensions in ~/.config/Code and ~/.vscode are kept.
 
-sudo dnf remove -y code
+if rpm -q code >/dev/null 2>&1; then
+  sudo dnf remove -y code
+else
+  echo "code is not installed."
+fi
 sudo rm -f /etc/yum.repos.d/vscode.repo
 
 echo ""

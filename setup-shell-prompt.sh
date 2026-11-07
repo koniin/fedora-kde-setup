@@ -41,7 +41,8 @@
 # and bat come from dnf.
 # The shell setup goes in ~/.bashrc.d/omarchy-prompt.sh, which Fedora's .bashrc
 # loads. Icons need a Nerd Font, like the one from setup-kde-font.sh.
-# Your old starship.toml is backed up to starship.toml.bak. Safe to run again.
+# A starship.toml that differs from this one is backed up to starship.toml.bak
+# first. Safe to run again.
 
 set -euo pipefail
 
@@ -82,15 +83,12 @@ else
   install -m 755 "$WORK/starship" "$BIN_DIR/starship"
 fi
 
-if [[ -f $STARSHIP_CONFIG ]]; then
-  cp "$STARSHIP_CONFIG" "$STARSHIP_CONFIG.bak"
-  echo "Backed up your old config to $STARSHIP_CONFIG.bak"
-fi
-
-echo "Writing $STARSHIP_CONFIG..."
 mkdir -p "$(dirname "$STARSHIP_CONFIG")"
+NEW_TOML=$(mktemp)
+# Replaces the trap above (if set), so clean up both temp paths.
+trap 'rm -rf "${WORK:-}" "$NEW_TOML"' EXIT
 # The \u escapes are Nerd Font icons: conflict, check mark and pencil.
-cat >"$STARSHIP_CONFIG" <<'TOML'
+cat >"$NEW_TOML" <<'TOML'
 add_newline = true
 command_timeout = 200
 format = "[$directory$git_branch$git_status]($style)$character"
@@ -124,6 +122,15 @@ staged     = ""
 renamed    = ""
 deleted    = ""
 TOML
+
+# Back up only a config that isn't already ours, so running this again doesn't
+# overwrite the backup of your original with a copy of this script's config.
+if [[ -f $STARSHIP_CONFIG ]] && ! cmp -s "$NEW_TOML" "$STARSHIP_CONFIG"; then
+  cp "$STARSHIP_CONFIG" "$STARSHIP_CONFIG.bak"
+  echo "Backed up your old config to $STARSHIP_CONFIG.bak"
+fi
+echo "Writing $STARSHIP_CONFIG..."
+install -m 644 "$NEW_TOML" "$STARSHIP_CONFIG"
 
 echo "Writing $INPUTRC_FILE..."
 mkdir -p "$(dirname "$INPUTRC_FILE")"

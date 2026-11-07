@@ -82,8 +82,10 @@ ln -sf "$INSTALL_DIR/tresorit-cli" "$BIN_DIR/tresorit-cli"
 
 version=$(sed -n 's/^Version=//p' "$APPS_DIR/tresorit.desktop" 2>/dev/null || true)
 
-echo "Opening Tresorit..."
-setsid "$INSTALL_DIR/tresorit" >/dev/null 2>&1 &
+if [[ -z ${NO_LAUNCH:-} ]]; then
+  echo "Opening Tresorit..."
+  setsid "$INSTALL_DIR/tresorit" >/dev/null 2>&1 &
+fi
 
 echo ""
 echo "Tresorit ${version:+$version }has been installed. Find it in the app menu or run 'tresorit'."

@@ -5,7 +5,11 @@
 
 set -e
 
-sudo dnf remove -y steam
+if rpm -q steam >/dev/null 2>&1; then
+  sudo dnf remove -y steam
+else
+  echo "steam is not installed."
+fi
 
 DATA_DIRS=(
   "$HOME/.steam"

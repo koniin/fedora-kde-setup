@@ -7,7 +7,7 @@
 #   colors, app style (Kvantum), window borders, cursors, icons, GTK, Konsole.
 #
 # Everything goes into your home directory (sudo is only used for dnf). Your
-# old config files are backed up first. Safe to run again.
+# old config files are backed up on the first run. Safe to run again.
 # Usually run through setup-kde-henke.sh, which also saves this look as the
 # "Henke" global theme and sets up the login and lock screens.
 #
@@ -20,18 +20,25 @@ GTK_URL="https://github.com/EliverLara/Nordic/releases/latest/download/Nordic.ta
 
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
-BACKUP="$CONFIG/nord-theme-backup-$(date +%Y%m%d-%H%M%S)"
+# Your config from before the first run. Later runs keep that backup rather
+# than making new ones of config this script already changed.
+BACKUP=$(find "$CONFIG" -maxdepth 1 -type d -name 'nord-theme-backup-*' 2>/dev/null | sort | head -1)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
 echo "Installing packages (Kvantum, Papirus icons)..."
 sudo dnf install -y kvantum papirus-icon-theme git ImageMagick
 
-echo "Backing up current config to $BACKUP..."
-mkdir -p "$BACKUP"
-for f in kdeglobals kwinrc konsolerc kscreenlockerrc gtk-3.0/settings.ini gtk-4.0/settings.ini Kvantum/kvantum.kvconfig; do
-  [[ -f $CONFIG/$f ]] && install -D -m 644 "$CONFIG/$f" "$BACKUP/$f"
-done
+if [[ -n $BACKUP ]]; then
+  echo "Keeping your earlier backup in $BACKUP."
+else
+  BACKUP="$CONFIG/nord-theme-backup-$(date +%Y%m%d-%H%M%S)"
+  echo "Backing up current config to $BACKUP..."
+  mkdir -p "$BACKUP"
+  for f in kdeglobals kwinrc konsolerc kscreenlockerrc gtk-3.0/settings.ini gtk-4.0/settings.ini Kvantum/kvantum.kvconfig; do
+    if [[ -f $CONFIG/$f ]]; then install -D -m 644 "$CONFIG/$f" "$BACKUP/$f"; fi
+  done
+fi
 
 echo "Downloading Nordic..."
 git clone --depth 1 --quiet "$REPO_URL" "$WORK/Nordic"
