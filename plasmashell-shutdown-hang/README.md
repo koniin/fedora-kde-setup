@@ -12,6 +12,7 @@ Shutdown/reboot takes ~41 s instead of ~2 s.
 | -4 | ~9 h     | 41.3 s | yes |
 | -3 | ~22 min  | 1.8 s  | no  |
 | -1 | ~3.3 h   | 41.0 s | yes |
+| 2026-11-07 09:17–23:06 | ~13.8 h | 40.0 s | yes (on 6.8.2; hook was NOT installed, coredump failed again) |
 
 The hang seems to need a longer session; the short session shut down cleanly.
 

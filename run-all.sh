@@ -8,6 +8,7 @@
 #   ./run-all.sh --skip STEP...     run everything except these steps
 #
 # STEP is a script name, with or without ".sh" (e.g. install-steam).
+# Steps are looked up in this folder first, then in remove/.
 #
 # Every script checks what's already done and skips it, so running this again
 # only changes what's missing or out of date. If a step fails, the rest still
@@ -24,6 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # The order matters:
 #   - git first: installs git/gh and asks for the GitHub login while you're
 #     still at the keyboard.
+#   - unused KDE apps out early, so later steps don't spend time on them.
 #   - codecs before Steam: both use RPM Fusion; codecs adds the free repo.
 #   - the font before the theme (the login screen copies your fonts), foot and
 #     the shell prompt (both use its icons).
@@ -33,6 +35,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 #   - Firefox's setting last-ish: by then Firefox (and its profile) exist.
 STEPS=(
   setup-git                        # git name/email, GitHub login
+  remove-kde-extras                # drop unused KDE apps (keeps LibreOffice)
   install-codecs                   # RPM Fusion free, full ffmpeg, VA-API driver
   setup-kde-font                   # JetBrainsMono Nerd Font everywhere
   setup-kde-henke                  # Nord theme, Henke global theme, wallpaper, login screen
@@ -182,7 +185,9 @@ for step in "${plan[@]}"; do
   n=$((n + 1))
   echo ""
   echo "==================== [$n/$total] $step ===================="
-  if "$SCRIPT_DIR/$step.sh"; then
+  script="$SCRIPT_DIR/$step.sh"
+  [[ -f $script ]] || script="$SCRIPT_DIR/remove/$step.sh"
+  if "$script"; then
     ok+=("$step")
   else
     echo ">>> $step failed (exit code $?)." >&2

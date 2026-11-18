@@ -8,7 +8,8 @@ Scripts that install and set up a Fedora KDE Plasma machine.
 ./run-all.sh
 ```
 
-Runs every `install-*` and `setup-*` script in the right order (see
+Runs every `install-*` and `setup-*` script in the right order, plus
+`remove/remove-kde-extras.sh` to clear out unused KDE apps (see
 `./run-all.sh --list`). Run it from inside a Plasma session as your normal user;
 it asks for your sudo password once.
 
@@ -26,6 +27,9 @@ the failures are listed at the end.
 
 Each script also runs on its own, e.g. `./install-steam.sh`. Everything an
 install script adds can be undone with the matching script in `remove/`.
+
+`remove/remove-kde-extras.sh` removes the Fedora KDE apps that go unused (the
+KDE mail/calendar suite, games, Blender and a few others; LibreOffice stays).
 
 When you add a new `install-*` or `setup-*` script, add it to `STEPS` in
 `run-all.sh` (it warns about scripts that aren't listed).
