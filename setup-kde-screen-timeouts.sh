@@ -1,5 +1,5 @@
 #!/bin/bash
-# Make KDE Plasma turn the screen off after 1 minute idle and lock the session
+# Make KDE Plasma turn the screen off after 2 minutes idle and lock the session
 # as it does, so moving the mouse or pressing a key brings up the lock screen.
 # If the lock screen is then left alone, KDE turns the screen off again after
 # its usual delay. Applies whether plugged in, on battery or on low battery.
@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-IDLE_MINUTES=1
+IDLE_MINUTES=2
 
 echo "Turning the screen off after $IDLE_MINUTES minute(s) idle..."
 for profile in AC Battery LowBattery; do
