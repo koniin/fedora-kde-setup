@@ -13,6 +13,8 @@
 #      from the PCI bus and rescans instead.
 #   2. Waits for the Logitech receiver (046d:c53f) to come back and resets it,
 #      so it pairs with the mouse again (otherwise the mouse stays dead).
+#   3. Turns each external monitor off and on again in KDE, so the monitor
+#      picks up the DisplayPort signal from the dock again.
 #
 # Safe to run again.
 
@@ -91,9 +93,29 @@ for id in "${RECEIVERS[@]}"; do
   done
 done
 
+# Turn each enabled external monitor off and on, which sets up the
+# DisplayPort link again and wakes a monitor that stayed black.
+if command -v kscreen-doctor >/dev/null; then
+  outputs=$(kscreen-doctor -o 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' |
+    awk '/^Output:/ { name = $3; getline; if ($1 == "enabled" && name !~ /^eDP/) print name }')
+  for out in $outputs; do
+    echo "Turning monitor $out off and on..."
+    if kscreen-doctor "output.$out.disable" >/dev/null 2>&1; then
+      sleep 2
+      kscreen-doctor "output.$out.enable" >/dev/null 2>&1 ||
+        echo "Couldn't turn $out back on; use System Settings → Display." >&2
+    else
+      # Disabling fails when it's the only screen in use (laptop lid closed).
+      kscreen-doctor --dpms off >/dev/null 2>&1; sleep 2
+      kscreen-doctor --dpms on >/dev/null 2>&1
+    fi
+  done
+fi
+
 echo "Done. Click a mouse button if the mouse doesn't move straight away."
 HELPER
 chmod +x "$HELPER"
 
 echo "Installed $HELPER"
-echo "Run 'usb-dock-reset' when the dock's keyboard/mouse/network stop working."
+echo "Run 'usb-dock-reset' when the dock's keyboard/mouse/network stop working"
+echo "or the external monitor stays black."
